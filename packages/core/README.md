@@ -47,6 +47,7 @@ createTask(input: TaskCreateInput, ctx): Promise<Task>
 updateTask(id, patch: TaskUpdateInput, ctx): Promise<Task>
 moveTask(id, status, ctx): Promise<Task>     // depends_on gate on terminal status
 deleteTask(id, ctx): Promise<void>
+addComment(id, { author, text }, ctx): Promise<TaskComment>   // appends to ## Comments
 
 watchTasks(ctx, cb: (event: TaskEvent) => void): () => Promise<void>
 commitTasks(ctx, message?): Promise<void>    // stages tasksDir + git commit
@@ -58,9 +59,11 @@ parseTask(raw, filePath): Task
 parseTaskFile(filePath): Promise<Task>
 serializeTask(task, mode: "ordna" | "backlog"): string
 extractAcceptanceCriteria(sections): AcceptanceItem[]
+extractComments(sections): TaskComment[]
+formatComment(comment): string
 ```
 
-Types: `Task`, `Section`, `AcceptanceItem`, `Priority`, `SchemaMode`, `OrdnaConfig`, `StoreContext`, `TaskCreateInput`, `TaskUpdateInput`, `TaskEvent`.
+Types: `Task`, `Section`, `AcceptanceItem`, `TaskComment`, `CommentInput`, `Priority`, `SchemaMode`, `OrdnaConfig`, `StoreContext`, `TaskCreateInput`, `TaskUpdateInput`, `TaskEvent`.
 
 ## Task file format
 
@@ -180,6 +183,8 @@ In `schema: backlog` mode the writer uses Backlog-style filenames (`task-1 - tit
 | `backlog` | `## Description` / `## Acceptance Criteria` / `## Implementation Plan` / `## Implementation Notes` / `## Final Summary` |
 
 Section headings are matched case-insensitively, with aliases (`Goal`/`Description`, `Notes`/`Implementation Notes`, `Progress`/`Final Summary`).
+
+Either schema may also carry a `## Comments` section. It is not part of the defaults: `addComment` creates it at the end of the body on the first comment, then appends one `- **@author** _YYYY-MM-DD_ — text` line per comment.
 
 ## License
 

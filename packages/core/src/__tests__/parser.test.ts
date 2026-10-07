@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { extractAcceptanceCriteria, parseTask, splitSections } from "../parser.js";
+import { extractAcceptanceCriteria, extractComments, parseTask, splitSections } from "../parser.js";
+import { formatComment } from "../writer.js";
 
 const ORDNA_FIXTURE = `---
 id: T-001
@@ -96,6 +97,34 @@ describe("parser — backlog schema", () => {
 		const items = extractAcceptanceCriteria(task.sections);
 		expect(items).toHaveLength(2);
 		expect(items.every((i) => !i.checked)).toBe(true);
+	});
+});
+
+describe("extractComments", () => {
+	it("parses author, date and text, skipping lines outside the grammar", () => {
+		const sections = splitSections(
+			[
+				"## Comments",
+				"- **@fredrik** _2026-08-13_ — the paging param is 1-indexed upstream",
+				"stray line",
+				"- **@Ada Lovelace** _2026-08-14_ — noted, adjusted the adapter",
+			].join("\n"),
+		);
+		expect(extractComments(sections)).toEqual([
+			{ author: "fredrik", date: "2026-08-13", text: "the paging param is 1-indexed upstream" },
+			{ author: "Ada Lovelace", date: "2026-08-14", text: "noted, adjusted the adapter" },
+		]);
+	});
+
+	it("returns [] when the task has no Comments section", () => {
+		const task = parseTask(ORDNA_FIXTURE, "/tmp/T-001.md");
+		expect(extractComments(task.sections)).toEqual([]);
+	});
+
+	it("round-trips with formatComment", () => {
+		const comment = { author: "agent", date: "2026-08-13", text: "done — see T-002" };
+		const sections = splitSections(`## Comments\n${formatComment(comment)}`);
+		expect(extractComments(sections)).toEqual([comment]);
 	});
 });
 

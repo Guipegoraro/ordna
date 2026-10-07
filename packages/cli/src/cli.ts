@@ -2,6 +2,7 @@ import type { Priority } from "@frehilm/ordna-core";
 import { Command } from "commander";
 import { runAssign } from "./commands/assign.js";
 import { runAttach, runAttachments, runDetach } from "./commands/attach.js";
+import { runComment } from "./commands/comment.js";
 import { runCommit } from "./commands/commit.js";
 import { runCreate } from "./commands/create.js";
 import { runInit } from "./commands/init.js";
@@ -82,6 +83,14 @@ export function buildProgram(): Command {
 		.command("assign <id> [name]")
 		.description("Assign a task (omit name to unassign)")
 		.action((id: string, name?: string) => runAssign(id, name));
+
+	program
+		.command("comment <id> <text...>")
+		.description("Append a comment to a task's ## Comments section")
+		.option("--as <author>", "comment author (default: $ORDNA_AUTHOR, else git config user.name)")
+		.action((id: string, textParts: string[], opts: { as?: string }) =>
+			runComment(id, textParts.join(" "), { as: opts.as }),
+		);
 
 	program
 		.command("attach <id> <file>")

@@ -91,6 +91,24 @@ The `Acceptance Criteria` checkboxes (`- [ ]` / `- [x]`) are the source of
 truth for AC progress — they are parsed structurally; there is no separate
 frontmatter field for them.
 
+### Comments
+
+A task may also carry a `## Comments` section: the conversation between the
+humans and agents working the card. It is created by the first
+`ordna comment` and is append-only, one line per comment:
+
+```markdown
+## Comments
+- **@fredrik** _2026-08-13_ — the paging param is 1-indexed upstream, watch out
+- **@agent** _2026-08-13_ — noted, adjusted the adapter
+```
+
+**Read `## Comments` before starting a task** — that's where a human steers
+or corrects a card after it was written. **Reply there when you finish or get
+stuck**, with `ordna comment <id> <text>`. Never edit or delete a past
+comment; with file/hybrid storage, `git log -p` on the task file is the audit
+trail.
+
 ### Backlog.md compatibility
 
 Ordna can read repos that follow the
@@ -200,6 +218,7 @@ directory.
 | `ordna create <title…>`                  | Create a task. See options below.                                  |
 | `ordna move <id> <status>`               | Move a task. Rejected if `done` and any `depends_on` task isn't done. |
 | `ordna assign <id> [name]`               | Assign a task; omit `name` to unassign.                            |
+| `ordna comment <id> <text…> [--as a]`    | Append to `## Comments`. Author: `--as`, `$ORDNA_AUTHOR`, git user.name. |
 | `ordna commit -m "msg"`                  | Stage `tasks/` and `git commit`. **Never auto-runs.**              |
 | `ordna web [--port N] [--host H]`        | Start the local web Kanban (opens browser).                        |
 | `ordna board` (or just `ordna`)          | Open the Kanban TUI.                                               |
@@ -224,6 +243,7 @@ ordna create "Write tests" -d T-001              # depends on T-001
 ordna list -s todo
 ordna move T-001 doing
 ordna assign T-001 fredrik
+ordna comment T-001 "started on the card flow" --as agent
 ordna show T-001
 ordna commit -m "tasks: progress on T-001"
 ```

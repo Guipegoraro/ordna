@@ -9,6 +9,7 @@ import {
 	type RawFrontmatter,
 	type Section,
 	type Task,
+	type TaskComment,
 	frontmatterSchema,
 } from "./schema.js";
 
@@ -122,6 +123,23 @@ export function extractAcceptanceCriteria(sections: Section[]): AcceptanceItem[]
 		if (m) items.push({ checked: m[1] !== " ", text: (m[2] ?? "").trim() });
 	}
 	return items;
+}
+
+/**
+ * Parse the `## Comments` section into structured comments. Lines that
+ * don't follow the `- **@author** _YYYY-MM-DD_ — text` grammar are
+ * skipped, same as non-checkbox lines in Acceptance Criteria.
+ */
+export function extractComments(sections: Section[]): TaskComment[] {
+	const section = findSection(sections, "comments");
+	if (!section) return [];
+	const comments: TaskComment[] = [];
+	for (const line of section.content.split("\n")) {
+		const m = line.match(/^\s*-\s+\*\*@(.+?)\*\*\s+_(\d{4}-\d{2}-\d{2})_\s+—\s+(.*)$/);
+		if (!m) continue;
+		comments.push({ author: m[1] as string, date: m[2] as string, text: (m[3] ?? "").trim() });
+	}
+	return comments;
 }
 
 function collectExtraFrontmatter(frontmatter: RawFrontmatter): Record<string, unknown> {

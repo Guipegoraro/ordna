@@ -8,11 +8,15 @@ import { beforeAll, describe, expect, it } from "vitest";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI_BIN = resolve(__dirname, "../../dist/bin/ordna.js");
 
-function run(cwd: string, args: string[]): { stdout: string; stderr: string; code: number } {
+function run(
+	cwd: string,
+	args: string[],
+	env: Record<string, string> = {},
+): { stdout: string; stderr: string; code: number } {
 	const result = spawnSync("node", [CLI_BIN, ...args], {
 		cwd,
 		encoding: "utf8",
-		env: { ...process.env, NO_COLOR: "1" },
+		env: { ...process.env, NO_COLOR: "1", ...env },
 	});
 	return {
 		stdout: result.stdout,
@@ -94,6 +98,35 @@ describe("ordna CLI", () => {
 
 	it("show exits 1 on unknown id", () => {
 		const r = run(cwd, ["show", "T-999"]);
+		expect(r.code).toBe(1);
+		expect(r.stderr).toContain("not found");
+	});
+
+	it("comment appends to ## Comments; show prints it", () => {
+		// --as wins over $ORDNA_AUTHOR.
+		const r = run(
+			cwd,
+			["comment", "T-001", "the", "paging", "param", "is", "1-indexed", "--as", "fredrik"],
+			{ ORDNA_AUTHOR: "agent" },
+		);
+		expect(r.code).toBe(0);
+		expect(r.stdout).toContain("@fredrik");
+
+		const fromEnv = run(cwd, ["comment", "T-001", "noted"], { ORDNA_AUTHOR: "agent" });
+		expect(fromEnv.code).toBe(0);
+
+		const file = readFileSync(join(cwd, "tasks", "T-001.md"), "utf8");
+		expect(file).toMatch(
+			/## Comments\n\n- \*\*@fredrik\*\* _\d{4}-\d{2}-\d{2}_ — the paging param is 1-indexed\n- \*\*@agent\*\* _\d{4}-\d{2}-\d{2}_ — noted\n/,
+		);
+
+		const shown = run(cwd, ["show", "T-001"]);
+		expect(shown.stdout).toContain("## Comments");
+		expect(shown.stdout).toContain("@agent");
+	});
+
+	it("comment on an unknown task exits 1", () => {
+		const r = run(cwd, ["comment", "T-999", "hello", "--as", "fredrik"]);
 		expect(r.code).toBe(1);
 		expect(r.stderr).toContain("not found");
 	});

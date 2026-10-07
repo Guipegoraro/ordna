@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { type OrdnaConfig, loadConfig, resolveTasksDir } from "./config.js";
-import type { Attachment, Task, TaskCreateInput, TaskUpdateInput } from "./schema.js";
+import { findSection } from "./parser.js";
+import type { Attachment, Task, TaskComment, TaskCreateInput, TaskUpdateInput } from "./schema.js";
 import {
 	ARCHIVED_STATUS,
 	type AttachmentInput,
@@ -13,6 +14,7 @@ import {
 import { FileBackend } from "./storage/backends/file.js";
 import { HybridBackend } from "./storage/backends/hybrid.js";
 import { NamespaceBackend } from "./storage/backends/namespace.js";
+import { formatComment } from "./writer.js";
 
 /**
  * Public context object passed to every store function. The `backend`
@@ -171,6 +173,45 @@ export async function moveTask(
 		}
 	}
 	return ctx.backend.update(id, { status });
+}
+
+export interface CommentInput {
+	author: string;
+	text: string;
+}
+
+/**
+ * Append a comment to the task's `## Comments` section. The section
+ * is created lazily at the end of the body on the first comment, so
+ * `defaultSectionsFor` and existing files stay untouched until someone
+ * comments. Author and text are collapsed to a single line — one line
+ * per comment is what `extractComments` parses back — and `**` is
+ * rejected in the author, where it would end the bold span early.
+ */
+export async function addComment(
+	id: string,
+	input: CommentInput,
+	ctx: StoreContext = createContext(),
+): Promise<TaskComment> {
+	const author = input.author.replace(/\s+/g, " ").trim().replace(/^@/, "").trim();
+	const text = input.text.replace(/\s+/g, " ").trim();
+	if (author.length === 0) throw new Error("Comment author is empty.");
+	if (author.includes("**")) throw new Error(`Comment author "${author}" can't contain "**".`);
+	if (text.length === 0) throw new Error("Comment text is empty.");
+
+	const task = await ctx.backend.get(id);
+	if (!task) throw new Error(`Task ${id} not found.`);
+
+	const comment: TaskComment = { author, date: new Date().toISOString().slice(0, 10), text };
+	const line = formatComment(comment);
+	const existing = findSection(task.sections, "comments");
+	const sections = existing
+		? task.sections.map((s) =>
+				s === existing ? { ...s, content: s.content ? `${s.content}\n${line}` : line } : s,
+			)
+		: [...task.sections, { heading: "Comments", level: 2, content: line }];
+	await ctx.backend.update(id, { sections });
+	return comment;
 }
 
 export async function deleteTask(id: string, ctx: StoreContext = createContext()): Promise<void> {
