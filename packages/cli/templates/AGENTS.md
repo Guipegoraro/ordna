@@ -139,6 +139,7 @@ statuses: [todo, doing, done]           # Kanban columns, in left-to-right order
 idPrefix: T                             # prefix used when generating new IDs
 zeroPaddedIds: 3                        # digits of zero-padding (0–10)
 webPort: 7420                           # default port for `ordna web`
+webTitle: Ordna                         # browser tab title for `ordna web`
 ```
 
 | Key             | Default               | Notes                                                                |
@@ -149,6 +150,7 @@ webPort: 7420                           # default port for `ordna web`
 | `idPrefix`      | `T`                   | One prefix per project.                                              |
 | `zeroPaddedIds` | `3`                   | `0` disables padding. Range `0..10`.                                 |
 | `webPort`       | `7420`                | Overridable via `ordna web --port N`.                                |
+| `webTitle`      | `Ordna`               | Names the browser tab; tells boards apart when several are open.     |
 
 **Rules**
 

@@ -11,6 +11,10 @@ export const configSchema = z.object({
 	idPrefix: z.string().default("T"),
 	zeroPaddedIds: z.number().int().min(0).max(10).default(3),
 	webPort: z.number().int().min(1).max(65535).default(7420),
+	// T-043: browser tab title for `ordna web`. Unset keeps the "Ordna"
+	// title from index.html; set it to tell boards apart when several
+	// are open side by side in the same browser.
+	webTitle: z.string().optional(),
 	// T-031: storage mode selector. "file" (current default) keeps the
 	// existing on-disk layout. "hybrid" adds a sync ref for the next-id
 	// allocator + audit log. "namespace" (T-032) stores tasks as git

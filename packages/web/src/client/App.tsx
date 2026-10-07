@@ -120,6 +120,12 @@ export function App(): JSX.Element {
 		})();
 	}, []);
 
+	// T-043: `webTitle` from config names the browser tab. index.html
+	// ships "Ordna", which stays when the key is unset.
+	useEffect(() => {
+		if (config?.webTitle) document.title = config.webTitle;
+	}, [config?.webTitle]);
+
 	// Live updates over WebSocket — with reconnection and gap recovery.
 	// The socket dies silently all the time in practice (laptop sleep,
 	// backgrounded tabs, server restarts), and the server has no event
