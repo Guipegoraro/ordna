@@ -24,6 +24,7 @@ ordna skill install \
 |---|---|---|
 | [`orchestrate.md`](orchestrate.md) | Plans a multi-step task on the ordna board and drives each task through implement → dual-reviewer pipeline → done. Works in single git repo, git umbrella, and non-git-root modes. | needs `orchestrate-init.md` |
 | [`orchestrate-init.md`](orchestrate-init.md) | One-time setup for `/orchestrate` in a new project. Detects the environment mode, expands the status flow to 5 columns, wires `.gitignore`s, and interactively configures a reviewer roster persisted to `.ordna/orchestrate.yaml`. | bootstraps `orchestrate.md` |
+| [`ordna/SKILL.md`](ordna/SKILL.md) | Day-to-day board handling in Portuguese (pt-BR): read at the smallest granularity, task lifecycle with Progress before move, `## Comments` loop, creating a board with `idPrefix`/`webTitle`. Written for a Claude Code setup that also tracks TOTVS Protheus work (`.claude/plans/<slug>/`). Install the folder to `.claude/skills/ordna/`. | `ordna/reference.md` (copy of the `AGENTS.md` guide) |
 
 ## Contributing a new skill
 
