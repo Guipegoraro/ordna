@@ -11,6 +11,7 @@ export { commitTasks } from "./git.js";
 export { extractIdFromFilename, formatId, nextId, parseId } from "./ids.js";
 export {
 	extractAcceptanceCriteria,
+	extractComments,
 	findSection,
 	parseTask,
 	parseTaskFile,
@@ -24,6 +25,7 @@ export type {
 	SchemaMode,
 	Section,
 	Task,
+	TaskComment,
 	TaskCreateInput,
 	TaskUpdateInput,
 } from "./schema.js";
@@ -37,6 +39,7 @@ export {
 } from "./schema.js";
 export {
 	addAttachment,
+	addComment,
 	ARCHIVED_STATUS,
 	canAttach,
 	canFetch,
@@ -51,6 +54,7 @@ export {
 	readAttachment,
 	removeAttachment,
 	updateTask,
+	type CommentInput,
 	type ListTasksOptions,
 	type StoreContext,
 } from "./store.js";
@@ -59,7 +63,7 @@ export type {
 	AttachmentStore,
 	FetchResult,
 } from "./storage/backend.js";
-export { defaultSectionsFor, serializeTask } from "./writer.js";
+export { defaultSectionsFor, formatComment, serializeTask } from "./writer.js";
 export {
 	watchTasks,
 	type TaskEvent,

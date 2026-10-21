@@ -9,6 +9,19 @@ export interface AcceptanceItem {
 	checked: boolean;
 }
 
+/**
+ * One line of a task's `## Comments` section, rendered as
+ * `- **@author** _YYYY-MM-DD_ — text`. The section is append-only by
+ * convention; with file/hybrid storage, `git log -p` on the task file
+ * is the audit trail.
+ */
+export interface TaskComment {
+	author: string;
+	/** Date the comment was added, `YYYY-MM-DD`. */
+	date: string;
+	text: string;
+}
+
 export interface Section {
 	heading: string;
 	level: number;
@@ -139,6 +152,7 @@ export const BODY_HEADING_ALIASES: Record<string, string[]> = {
 	notes: ["Notes", "Implementation Notes"],
 	progress: ["Progress", "Final Summary"],
 	implementation_plan: ["Implementation Plan"],
+	comments: ["Comments"],
 };
 
 export const priorityEnum = z.enum(["high", "medium", "low"]);

@@ -5,6 +5,7 @@ import {
 	type SchemaMode,
 	type Section,
 	type Task,
+	type TaskComment,
 } from "./schema.js";
 
 function buildFrontmatter(task: Task, mode: SchemaMode): Record<string, unknown> {
@@ -68,6 +69,14 @@ export function serializeTask(task: Task, mode: SchemaMode): string {
 	const yaml = stringifyYaml(frontmatter).trimEnd();
 	const body = renderSections(task.sections);
 	return `---\n${yaml}\n---\n\n${body}\n`;
+}
+
+/**
+ * Render one `## Comments` line, the inverse of `extractComments` for
+ * single-line author and text (`addComment` normalizes both first).
+ */
+export function formatComment(comment: TaskComment): string {
+	return `- **@${comment.author}** _${comment.date}_ — ${comment.text}`;
 }
 
 export function defaultSectionsFor(mode: SchemaMode): Section[] {

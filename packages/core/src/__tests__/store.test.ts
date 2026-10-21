@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createContext } from "../store.js";
-import { createTask, moveTask, updateTask, listTasks, getTask } from "../store.js";
+import { addComment, createTask, moveTask, updateTask, listTasks, getTask } from "../store.js";
+import { extractComments, splitSections } from "../parser.js";
 import { makeTempRepo } from "./helpers.js";
 
 describe("store — ordna mode", () => {
@@ -51,6 +52,89 @@ describe("store — ordna mode", () => {
 		const today = new Date().toISOString().slice(0, 10);
 		expect(updated.updated_at).toBe(today);
 		expect(updated.title).toBe("y");
+	});
+});
+
+describe("store — comments", () => {
+	it("creates ## Comments lazily and appends one line per comment", async () => {
+		const repo = makeTempRepo("ordna");
+		const ctx = createContext(repo.cwd);
+		const t = await createTask({ title: "x" }, ctx);
+		expect(readFileSync(t.filePath, "utf8")).not.toContain("## Comments");
+
+		const first = await addComment(
+			t.id,
+			{ author: "@fredrik", text: "watch the\npaging param" },
+			ctx,
+		);
+		await addComment(t.id, { author: "agent", text: "noted" }, ctx);
+		const today = new Date().toISOString().slice(0, 10);
+		expect(first).toEqual({ author: "fredrik", date: today, text: "watch the paging param" });
+
+		const reloaded = await getTask(t.id, ctx);
+		expect(reloaded?.sections.map((s) => s.heading)).toEqual([
+			"Goal",
+			"Acceptance Criteria",
+			"Notes",
+			"Progress",
+			"Comments",
+		]);
+		expect(extractComments(reloaded?.sections ?? [])).toEqual([
+			{ author: "fredrik", date: today, text: "watch the paging param" },
+			{ author: "agent", date: today, text: "noted" },
+		]);
+	});
+
+	it("appends to an existing Comments section wherever it sits", async () => {
+		const repo = makeTempRepo("ordna");
+		const ctx = createContext(repo.cwd);
+		const t = await createTask({ title: "x" }, ctx);
+		await updateTask(
+			t.id,
+			{
+				sections: splitSections("## Comments\n- **@a** _2026-08-01_ — first\n\n## Notes\nkeep me"),
+			},
+			ctx,
+		);
+		await addComment(t.id, { author: "b", text: "second" }, ctx);
+		const reloaded = await getTask(t.id, ctx);
+		expect(reloaded?.sections.map((s) => s.heading)).toEqual(["Comments", "Notes"]);
+		expect(extractComments(reloaded?.sections ?? []).map((c) => c.text)).toEqual([
+			"first",
+			"second",
+		]);
+		expect(reloaded?.sections[1]?.content).toBe("keep me");
+	});
+
+	it("keeps the author on one line so it can't inject a heading", async () => {
+		const repo = makeTempRepo("ordna");
+		const ctx = createContext(repo.cwd);
+		const t = await createTask({ title: "x" }, ctx);
+		const comment = await addComment(t.id, { author: "@ bob\n## Notes", text: "hi" }, ctx);
+		expect(comment.author).toBe("bob ## Notes");
+
+		const reloaded = await getTask(t.id, ctx);
+		expect(reloaded?.sections.filter((s) => s.heading === "Notes")).toHaveLength(1);
+		expect(extractComments(reloaded?.sections ?? [])).toEqual([comment]);
+
+		await expect(
+			addComment(t.id, { author: "x** _2020-01-01_ — spoof", text: "hi" }, ctx),
+		).rejects.toThrow(/can't contain/);
+	});
+
+	it("rejects empty text, empty author and unknown tasks", async () => {
+		const repo = makeTempRepo("ordna");
+		const ctx = createContext(repo.cwd);
+		const t = await createTask({ title: "x" }, ctx);
+		await expect(addComment(t.id, { author: "a", text: "  " }, ctx)).rejects.toThrow(
+			/text is empty/,
+		);
+		await expect(addComment(t.id, { author: "@", text: "hi" }, ctx)).rejects.toThrow(
+			/author is empty/,
+		);
+		await expect(addComment("T-999", { author: "a", text: "hi" }, ctx)).rejects.toThrow(
+			/not found/,
+		);
 	});
 });
 

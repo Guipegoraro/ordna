@@ -32,6 +32,9 @@ ordna create <title...>   Create a task
   -s, --status <status>
 ordna move <id> <status>  Change status (depends_on gate on the terminal status)
 ordna assign <id> [name]  Omit name to unassign
+ordna comment <id> <text...>
+                          Append to ## Comments
+  --as <author>           default: $ORDNA_AUTHOR, else git config user.name
 ordna commit [-m msg]     Stage tasks/ and git commit
 ordna web [-p port]       Start the local web Kanban (delegates to @frehilm/ordna-web)
 ```
