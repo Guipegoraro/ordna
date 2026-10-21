@@ -52,6 +52,7 @@ describe("web server", () => {
 		const cfg = await res.json();
 		expect(cfg.statuses).toEqual(["todo", "doing", "done"]);
 		expect(cfg.tasksDir).toBe("tasks");
+		expect(cfg.webTitle).toBeUndefined();
 	});
 
 	it("POST /api/tasks creates a task; GET /api/tasks lists it", async () => {
@@ -417,5 +418,34 @@ describe("web server — attachment size cap", () => {
 			body: form,
 		});
 		expect(res.status).toBe(201);
+	});
+});
+
+describe("web server — webTitle", () => {
+	let handle: RunWebHandle;
+	let cwd: string;
+	let base: string;
+
+	beforeAll(async () => {
+		cwd = mkdtempSync(join(tmpdir(), "ordna-web-title-"));
+		mkdirSync(join(cwd, ".ordna"));
+		writeFileSync(
+			join(cwd, ".ordna", "config.yaml"),
+			"tasksDir: tasks\nschema: ordna\nwebTitle: Payments board\n",
+			"utf8",
+		);
+		mkdirSync(join(cwd, "tasks"));
+		handle = await runWeb({ cwd, port: 0, host: "127.0.0.1", openBrowser: false });
+		base = `http://127.0.0.1:${handle.port}`;
+	});
+
+	afterAll(async () => {
+		await handle.close();
+		rmSync(cwd, { recursive: true, force: true });
+	});
+
+	it("GET /api/config carries webTitle for the client to apply", async () => {
+		const cfg = await (await fetch(`${base}/api/config`)).json();
+		expect(cfg.webTitle).toBe("Payments board");
 	});
 });

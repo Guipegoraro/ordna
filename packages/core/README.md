@@ -116,6 +116,7 @@ statuses: [todo, doing, done]
 idPrefix: T                # custom prefix, e.g. BUG, EPIC
 zeroPaddedIds: 3           # width of the numeric part (0 = no padding)
 webPort: 7420              # consumed by @frehilm/ordna-web
+webTitle: Ordna            # browser tab title, consumed by @frehilm/ordna-web
 ```
 
 The last entry of `statuses` is the **terminal status** for the dependency gate.

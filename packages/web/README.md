@@ -84,7 +84,7 @@ Bodies are JSON; `Task` shape comes from [@frehilm/ordna-core](../core/README.md
 
 ## Configuration
 
-Inherits from [@frehilm/ordna-core](../core/README.md#configuration). The relevant key for this package is `webPort` (default `7420`).
+Inherits from [@frehilm/ordna-core](../core/README.md#configuration). The relevant keys for this package are `webPort` (default `7420`) and `webTitle` (browser tab title, default `Ordna`).
 
 The agent hook is configured via env (`ORDNA_AGENT_HOOK_URL`, `ORDNA_AGENT_HOOK_LABEL`, `ORDNA_AGENT_HOOK_HEADERS`) **or** programmatically via the `agentHook` option on `runWeb`. The programmatic option wins. Pass `null` to disable explicitly.
 
